@@ -5,10 +5,10 @@
 %>
 <%inherit file="_templates/batorel.mako" />
 
-<h2>Fehler</h2>
+<h2>Error</h2>
 
 <p>
-Sorry, wir können dir diesen Event nicht anzeigen, denn:
+Sorry, we cannot display this event:
 </p>
 
 <p style="font-weight: bold">

@@ -29,10 +29,12 @@ FCGI_SOCKET_UMASK = 0111
 
 # Render the template event.mako, which references the templates in ../iMeetUp
 mylookup = TemplateLookup(directories=['../iMeetUp'], input_encoding="utf8")
-template = Template(filename="event.mako", input_encoding="utf8", lookup=mylookup)
-errortemplate = Template(filename="error.mako", input_encoding="utf8", lookup=mylookup)
+template_en = Template(filename="event.en.mako", input_encoding="utf8", lookup=mylookup)
+template_de = Template(filename="event.de.mako", input_encoding="utf8", lookup=mylookup)
+errortemplate_en = Template(filename="error.en.mako", input_encoding="utf8", lookup=mylookup)
+errortemplate_de = Template(filename="error.de.mako", input_encoding="utf8", lookup=mylookup)
 
-path_re = re.compile('^/events/([0-9]+)')
+path_re = re.compile('^/events/([0-9]+)(\...)?')
 img_path_re = re.compile('^/events/img/([0-9]+)')
 
 class template_context:
@@ -43,7 +45,11 @@ class blogofile:
     def __init__(self, event_id):
         self.template_context = template_context(event_id)
 
-def render_event(start_response, event_id):
+def render_event(start_response, event_id, lang):
+    if not lang:
+        lang = ".en"
+    template = template_de if lang == ".de" else template_en
+    errortemplate = errortemplate_de if lang == ".de" else errortemplate_en
     db = MySQLdb.connect(
         user="imeetup",
         passwd="BPPGIVgDBZO4Jymo424OoHh",
@@ -106,13 +112,13 @@ def render_image(start_response, user_id):
 
     if not img:
         start_response('404 Not Found', [('Content-Type', 'text/html')])
-        page = errortemplate.render(error='No such user')
+        page = errortemplate_en.render(error='No such user')
         return [ unicode(page).encode('utf8') ]
 
     if img['PhotoPrivacy'] != 3:
 # TODO: an error image instead?
         start_response('403 Forbidden', [('Content-Type', 'text/html')])
-        page = errortemplate.render(error='Image is not public')
+        page = errortemplate_en.render(error='Image is not public')
         return [ unicode(page).encode('utf8') ]
 
     start_response('200 OK', [('Content-Type', 'image/jpeg')])
@@ -124,14 +130,14 @@ def myapp(environ, start_response):
     print "Handling ", path
     match = path_re.match(path)
     if match:
-        return render_event(start_response, match.group(1))
+        return render_event(start_response, match.group(1), match.group(2))
     
     imgmatch = img_path_re.match(path)
     if imgmatch:
         return render_image(start_response, imgmatch.group(1))
 
     start_response('404 Not Found', [('Content-Type', 'text/html')])
-    page = errortemplate.render(error='Invalid URL')
+    page = errortemplate_en.render(error='Invalid URL')
     return [ unicode(page).encode('utf8') ]
 
 def get_application():

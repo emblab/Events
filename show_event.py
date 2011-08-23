@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# vim:ts=4:sw=4:expandtab
 #
 # little python script to display events
 #
@@ -34,6 +35,14 @@ errortemplate = Template(filename="error.mako", input_encoding="utf8", lookup=my
 path_re = re.compile('^/events/([0-9]+)')
 img_path_re = re.compile('^/events/img/([0-9]+)')
 
+class template_context:
+    def __init__(self, event_id):
+        self.template_name = ("/events/%s.de.html.mako" % event_id)
+
+class blogofile:
+    def __init__(self, event_id):
+        self.template_context = template_context(event_id)
+
 def render_event(start_response, event_id):
     db = MySQLdb.connect(
         user="imeetup",
@@ -62,16 +71,16 @@ def render_event(start_response, event_id):
 
     if not event:
         start_response('404 Not Found', [('Content-Type', 'text/html')])
-        page = errortemplate.render(error='No such event')
+        page = errortemplate.render(error='No such event', bf=blogofile(event_id))
         return [ unicode(page).encode('utf8') ]
 
     if event['Privacy'] != 3:
         start_response('403 Forbidden', [('Content-Type', 'text/html')])
-        page = errortemplate.render(error='Event is not public')
+        page = errortemplate.render(error='Event is not public', bf=blogofile(event_id))
         return [ unicode(page).encode('utf8') ]
 
     start_response('200 OK', [('Content-Type', 'text/html')])
-    page = template.render(event=event)
+    page = template.render(event=event, bf=blogofile(event_id))
     return [ unicode(page).encode('utf8') ]
 
 def render_image(start_response, user_id):

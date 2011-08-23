@@ -1,6 +1,7 @@
 <%!
+	lang    = 'de'
 	bodycls = 'error'
-	title   = u'BaToReL: Fehler'
+	title   = u'BaToReL Error'
 %>
 <%inherit file="_templates/batorel.mako" />
 
